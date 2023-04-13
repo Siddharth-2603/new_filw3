@@ -13,9 +13,53 @@ import { useLocation } from 'react-router';
 
 function Navbar() {
 
-const [connected, toggleConnect] = useState(false);
-const location = useLocation();
-const [currAddress, updateAddress] = useState('0x');
+  const [isMetamaskInstalled, setisMetamaskInstalled] = useState(false);
+  const [accountAddress, setAccountAddress] = useState(null);
+  const [accountBalance, setAccountBalance] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [network, setNetwork] = useState(null);
+  const [status, setStatus] = useState("");
+  const [isDisabled, setIsDisabled] = useState(false);
+
+  const [uri, setUri] = useState("");
+  const [tokens, setTokens] = useState([]);
+
+  const contractAddress = "0xc704415859df6f4711A6deCB04B999cad2702179";
+
+  const { ethereum } = window;
+  
+  useEffect(() => {
+    const { ethereum } = window;
+    const checkMetamaskAvailability = async () => {
+      if (!ethereum) {
+        setisMetamaskInstalled(false);
+      }
+      setisMetamaskInstalled(true);
+    };
+    checkMetamaskAvailability();
+  }, []);
+  
+  const connectWallet = async () => {
+    try {
+      if (!ethereum) {
+        setisMetamaskInstalled(false);
+      }
+      const accounts = await ethereum.request({
+        method: 'eth_requestAccounts'
+      });
+      let balance = await provider.getBalance(accounts[0]);
+      let bal = ethers.utils.formatEther(balance);
+      let network = await provider.getNetwork();
+      setAccountAddress(accounts[0]);
+      setAccountBalance(bal);
+      setIsConnected(true);
+      setNetwork(network);
+    }
+    catch (error) {
+      setIsConnected(false);
+    }
+  }
+
 
     return (
       <div className="">
@@ -33,7 +77,7 @@ const [currAddress, updateAddress] = useState('0x');
             <ul className='lg:flex justify-between font-bold mr-10 text-lg'>
               {location.pathname === "/" ? 
               <li className='border-b-2 hover:pb-0 p-2'>
-                <Link to="/">Marketplace</Link>
+                <Link to="/"> Marketplace </Link>
               </li>
               :
               <li className='hover:border-b-2 hover:pb-0 p-2'>
@@ -59,14 +103,14 @@ const [currAddress, updateAddress] = useState('0x');
               </li>              
               }  
               <li>
-                <button className="enableEthereumButton bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">{connected? "Connected":"Connect Wallet"}</button>
+                <button className="enableEthereumButton bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm" onClick={connectWallet}>{isConnected? "Connected":"Connect Wallet"}</button>
               </li>
             </ul>
           </li>
           </ul>
         </nav>
         <div className='text-white text-bold text-right mr-10 text-sm'>
-          {currAddress !== "0x" ? "Connected to":"Not Connected. Please login to view NFTs"} {currAddress !== "0x" ? (currAddress.substring(0,15)+'...'):""}
+          {isConnected ? "Connected to":"Not Connected. Please login to view NFTs"} {isConnected ? (accountAddress.substring(0,15)+'...'):""}
         </div>
       </div>
     );
